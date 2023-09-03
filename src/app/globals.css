@@ -2,26 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+.arc-container {
+  position: relative;
+  margin-top: 55%;
+  width: 100%; /* Adjust the width as needed */
+  height: 300px; /* Adjust the height as needed */
+  display: flex;
+  justify-content: center;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+.arc-button {
+  position: absolute;
+
+  transition: transform 0.3s ease; /* Add smooth transition for the hover effect */
+
+  /* Use transform to position buttons in an arc */
+  transform-origin: center bottom;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+.arc-button:nth-child(1) {
+  transform: rotate(-60deg) translateY(-30vw);
+}
+
+.arc-button:nth-child(2) {
+  transform: rotate(-40deg) translateY(-30vw);
+}
+
+.arc-button:nth-child(3) {
+  transform: rotate(-20deg) translateY(-30vw);
+}
+
+.arc-button:nth-child(4) {
+  transform: rotate(0deg) translateY(-30vw);
+}
+
+.arc-button:nth-child(5) {
+  transform: rotate(20deg) translateY(-30vw);
+}
+
+.arc-button:nth-child(6) {
+  transform: rotate(40deg) translateY(-30vw);
+}
+
+.arc-button:nth-child(7) {
+  transform: rotate(60deg) translateY(-30vw);
 }
