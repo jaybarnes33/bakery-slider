@@ -3,16 +3,64 @@ import { pies } from "@/data";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
 import Image from "next/image";
-import { useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 
 export default function Home() {
+  const arcRef = useRef<HTMLDivElement | null>(null);
   const [item, setItem] = useState(0);
-  return (
-    <main className="text-white flex h-screen w-screen flex-col items-between justify-between p-24 fixed bg-[#ff6a00]">
-      {/*  Description */}
+  const [arcRadius, setArcRadius] = useState(0);
+  const [rotateAngle, setRotateAngle] = useState(0);
 
-      <section id="description" className="max-w-2xl mx-auto text-center">
-        <h1 className="my-5 text-2xl font-bold tracking-widest  ">
+  const pieAngles: [string, number][] = useMemo(() => {
+    return pies.map((pie, i) => {
+      const angle = (i / pies.length) * 160; // Distribute text evenly around the circle
+      return [pie.name, angle];
+    });
+  }, []);
+
+  const setRadius = useCallback(() => {
+    if (arcRef.current) {
+      const arcClientRect = arcRef.current.getBoundingClientRect();
+      setArcRadius(arcClientRect.width / 2);
+    }
+  }, [arcRef]);
+
+  const nextItem = () => setItem(item + 1);
+  const prevItem = () => setItem(item - 1);
+
+  const selectItem = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const { item } = event.currentTarget.dataset;
+    if (item) setItem(+item);
+  };
+
+  useEffect(() => {
+    const [, angle] = pieAngles[item];
+    setRotateAngle(angle);
+  }, [item, pieAngles]);
+
+  useEffect(() => {
+    setRadius();
+    window.addEventListener("resize", setRadius);
+
+    return () => {
+      window.removeEventListener("resize", setRadius);
+    };
+  }, [setRadius]);
+
+  return (
+    <main
+      style={{ backgroundColor: pies[item].color }}
+      className="transition-colors text-white h-screen w-screen"
+    >
+      {/*  Description */}
+      <section id="description" className="pt-8 max-w-2xl mx-auto text-center">
+        <h1 className="mb-5 text-2xl font-bold tracking-widest">
           {pies[item].name}
         </h1>
         <p>
@@ -24,38 +72,69 @@ export default function Home() {
           accusantium. Molestiae exercitationem mollitia corporis?
         </p>
       </section>
-
       {/* Carousel */}
-      <section id="carousel">
-        <button className=" absolute bottom-[5rem] h-10 grid place-items-center w-10 bg-[#ffffff52] rounded-full">
-          <ChevronLeftIcon width={24} />
-        </button>
-        <button className="h-10 absolute bottom-[5rem] right-24 grid place-items-center w-10 bg-[#ffffff52] rounded-full">
-          <ChevronRightIcon width={24} />
-        </button>
-        {/* Controls */}
-        <div className="relative h-[100vh] w-full flex justify-center">
-          <ul className="flex space-x-8">
-            {pies.map((pie, i) => {
-              return (
-                <li
-                  key={i}
-                  className="top-0 transition-transform origin-bottom"
-                >
-                  <button className="">{pie.name}</button>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="absolute -bottom-1/2 border-2 h-[60vw] w-[60vw] flex justify-center rounded-full -translate-y-[50%] before:content-[''] before:absolute before:top-0 before:left-[50%] before:w-4 before:h-4 before:bg-white before:rounded-full before:-translate-y-2">
-            <div className="border h-[50vw] w-[50vw]  rounded-full my-16">
-              <div className="relative w-full h-[inherit]">
-                <Image src={"/pumpkin.png"} alt={pies[item].name} fill />
-              </div>
+      <section
+        id="carousel"
+        className="fixed top-full h-fit w-[90vw] left-1/2 -translate-x-1/2 -translate-y-1/2"
+      >
+        <h2 className="sr-only">List of pies</h2>
+        <div className="controls absolute bottom-1/2 w-full flex justify-between -translate-y-1/2">
+          <button
+            disabled={item === 0}
+            onClick={prevItem}
+            aria-label="previous pie"
+            className="bg-white disabled:opacity-25 disabled:cursor-not-allowed p-6 border-[1px] bg-opacity-20 hover:bg-opacity-40 focus-visible:bg-opacity-50 outline-none active:bg-opacity-60 rounded-full transition-all"
+          >
+            <ChevronLeftIcon width={24} />
+          </button>
+          <button
+            disabled={item === pies.length - 1}
+            onClick={nextItem}
+            aria-label="next pie"
+            className="bg-white disabled:opacity-25 disabled:cursor-not-allowed p-6 border-[1px] bg-opacity-20 hover:bg-opacity-40 focus-visible:bg-opacity-50 outline-none active:bg-opacity-60 rounded-full transition-all"
+          >
+            <ChevronRightIcon width={24} />
+          </button>
+        </div>
+        {/* Arc container */}
+        <div
+          ref={arcRef}
+          style={{
+            transform: `rotate(${rotateAngle - 68}deg)`
+          }}
+          className="transition-transform border-2 rounded-full w-3/4 mx-auto aspect-square p-12 relative before:content-[''] before:bg-white before:absolute before:top-0 before:left-1/2 before:-translate-y-1/2 before:w-6 before:h-6 before:rounded-full before:drop-shadow-xl"
+        >
+          <div className="border-[1px] rounded-full w-full h-full">
+            <div className="relative w-full aspect-square">
+              <Image src={"/pumpkin.png"} alt={pies[item].name} fill />
             </div>
           </div>
         </div>
+        <ul className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-4 z-10 -rotate-[68deg]">
+          {pieAngles.map(([pie, angle], i) => (
+            <li
+              key={i}
+              className="absolute"
+              style={{
+                transform: `rotate(${angle}deg) translateY(-${
+                  arcRadius + 50
+                }px)`
+              }}
+            >
+              <button
+                className={`text-gray-100 ${
+                  item === i
+                    ? "text-opacity-100 hover:text-opacity-100"
+                    : "text-opacity-50 hover:text-opacity-70"
+                }`}
+                data-item={i}
+                onClick={selectItem}
+              >
+                {pie}
+              </button>
+            </li>
+          ))}
+        </ul>
       </section>
     </main>
   );
