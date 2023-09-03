@@ -3,16 +3,25 @@ import { pies } from "@/data";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 export default function Home() {
   const [item, setItem] = useState(0);
-  return (
-    <main className="text-white flex h-screen w-screen flex-col items-between justify-between p-24 fixed bg-[#ff6a00]">
-      {/*  Description */}
+  const arcRef = useRef<HTMLDivElement | null>(null);
+  const [arcRadius, setArcRadius] = useState(0);
 
-      <section id="description" className="max-w-2xl mx-auto text-center">
-        <h1 className="my-5 text-2xl font-bold tracking-widest  ">
+  useLayoutEffect(() => {
+    if (arcRef.current) {
+      const arcClientRect = arcRef.current.getBoundingClientRect();
+      setArcRadius(arcClientRect.width / 2);
+    }
+  }, [arcRef]);
+
+  return (
+    <main className="text-white h-screen w-screen bg-[#ff6a00]">
+      {/*  Description */}
+      <section id="description" className="pt-8 max-w-2xl mx-auto text-center">
+        <h1 className="mb-5 text-2xl font-bold tracking-widest  ">
           {pies[item].name}
         </h1>
         <p>
@@ -24,38 +33,51 @@ export default function Home() {
           accusantium. Molestiae exercitationem mollitia corporis?
         </p>
       </section>
-
       {/* Carousel */}
-      <section id="carousel">
-        <button className=" absolute bottom-[5rem] h-10 grid place-items-center w-10 bg-[#ffffff52] rounded-full">
-          <ChevronLeftIcon width={24} />
-        </button>
-        <button className="h-10 absolute bottom-[5rem] right-24 grid place-items-center w-10 bg-[#ffffff52] rounded-full">
-          <ChevronRightIcon width={24} />
-        </button>
-        {/* Controls */}
-        <div className="relative h-[100vh] w-full flex justify-center">
-          <ul className="flex space-x-8">
-            {pies.map((pie, i) => {
-              return (
-                <li
-                  key={i}
-                  className="top-0 transition-transform origin-bottom"
-                >
-                  <button className="">{pie.name}</button>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="absolute -bottom-1/2 border-2 h-[60vw] w-[60vw] flex justify-center rounded-full -translate-y-[50%] before:content-[''] before:absolute before:top-0 before:left-[50%] before:w-4 before:h-4 before:bg-white before:rounded-full before:-translate-y-2">
-            <div className="border h-[50vw] w-[50vw]  rounded-full my-16">
-              <div className="relative w-full h-[inherit]">
-                <Image src={"/pumpkin.png"} alt={pies[item].name} fill />
-              </div>
+      <section
+        id="carousel"
+        className="fixed top-full h-fit w-[90vw] left-1/2 -translate-x-1/2 -translate-y-1/2"
+      >
+        <h2 className="sr-only">List of pies</h2>
+        <div className="controls absolute bottom-1/2 w-full flex justify-between -translate-y-1/2">
+          <button className="bg-white p-6 border-[1px] bg-opacity-20 hover:bg-opacity-40 focus-visible:bg-opacity-50 outline-none active:bg-opacity-60 rounded-full transition-all">
+            <ChevronLeftIcon width={24} />
+          </button>
+          <button className="bg-white p-6 border-[1px] bg-opacity-20 hover:bg-opacity-40 focus-visible:bg-opacity-50 outline-none active:bg-opacity-60 rounded-full transition-all">
+            <ChevronRightIcon width={24} />
+          </button>
+        </div>
+        {/* Arc container */}
+        <div
+          ref={arcRef}
+          className="border-2 rounded-full w-3/4 mx-auto aspect-square p-12 relative before:content-[''] before:bg-white before:absolute before:top-0 before:left-1/2 before:-translate-y-1/2 before:w-6 before:h-6 before:rounded-full before:shadow-lg before:shadow-orange-400"
+        >
+          <div className="border-[1px] border-orange-100 rounded-full w-full h-full">
+            <div className="relative w-full aspect-square">
+              <Image src={"/pumpkin.png"} alt={pies[item].name} fill />
             </div>
           </div>
         </div>
+        <ul className="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 z-10 -rotate-[75deg]">
+          {pies.map((pie, i) => {
+            const angle = (i / pies.length) * 150; // Distribute text evenly around the circle
+
+            console.log(pie, i, angle);
+
+            return (
+              <li
+                key={i}
+                style={{
+                  transform: `rotate(${angle}deg) translateY(-${arcRadius}px)`
+                }}
+              >
+                <button className="text-gray-100 text-opacity-50">
+                  {pie.name}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </section>
     </main>
   );
